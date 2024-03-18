@@ -100,7 +100,7 @@ class HBNBCommand(cmd.Cmd):
         """ Prints the help documentation for quit  """
         print("Exits the program with formatting\n")
 
-    def do_EOF(self, arg):
+    def do_EOF(self, args):
         """ Handles EOF to exit program """
         print()
         exit()
@@ -114,17 +114,38 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class"""
-        if not args:
+        """"Create <class> <key 1>=<value 1> <key 2>=<value 2> ...
+        Creates a new class instance with given keys/values and print its id.
+        """
+        try:
+            if args == "" or args is None:
+                raise SyntaxError()
+            new_list = args.split(" ")
+
+            kwargs = {}
+            for k in range(1, len(new_list)):
+                key, value = tuple(new_list[1].split("="))
+                if value[0] == "":
+                    value = value.strip("").replace("_"," ")
+                else:
+                    try:
+                        value = eval(value)
+                    except (SyntaxError, NameError):
+                        continue
+                    kwargs[key] = value
+
+                if kwargs == {}:
+                    obj = eval(new_list[0])()
+                else:
+                    obj = eval(new_list[0])(**kwargs)
+                    storage.new(obj)
+                print(obj.id)
+                obj.save()
+
+        except SyntaxError:             
             print("** class name missing **")
-            return
-        elif args not in HBNBCommand.classes:
+        except NameError:
             print("** class doesn't exist **")
-            return
-        new_instance = HBNBCommand.classes[args]()
-        storage.save()
-        print(new_instance.id)
-        storage.save()
 
     def help_create(self):
         """ Help information for the create method """
@@ -272,21 +293,21 @@ class HBNBCommand(cmd.Cmd):
                 args.append(v)
         else:  # isolate args
             args = args[2]
-            if args and args[0] is '\"':  # check for quoted arg
+            if args and args[0] is '\"':  # check for quoted args
                 second_quote = args.find('\"', 1)
                 att_name = args[1:second_quote]
                 args = args[second_quote + 1:]
 
             args = args.partition(' ')
 
-            # if att_name was not quoted arg
+            # if att_name was not quoted args
             if not att_name and args[0] is not ' ':
                 att_name = args[0]
-            # check for quoted val arg
+            # check for quoted val args
             if args[2] and args[2][0] is '\"':
                 att_val = args[2][1:args[2].find('\"', 1)]
 
-            # if att_val was not quoted arg
+            # if att_val was not quoted args
             if not att_val and args[2]:
                 att_val = args[2].partition(' ')[0]
 
